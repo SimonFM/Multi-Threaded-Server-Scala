@@ -22,7 +22,7 @@ object Client {
       //Loop forever, while the message hasn't been converted.
 
       while(notConverted){
-        if(recv == "KILL_SERVICE"){
+        if(recv == "KILL_SERVICE\n"){
           notConverted = false
           socket.close()
         }

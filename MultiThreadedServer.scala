@@ -71,31 +71,36 @@ object MultithreadedServer{
        * - Or it kills the server if KILL_SERVICE
        */
       def run() {
-        // if there is another message, get it.
-        if (in.hasNext) {
-          recv = in.next()
-          println("Received: " + recv)
+        try {
+          // if there is another message, get it.
+          if (in.hasNext) {
+            recv = in.next()
+            println("Received: " + recv)
+          }
+          val prefix = recv take 5
+          if (recv == "KILL_SERVICE\\n") {
+            println(Thread.currentThread.getName() + " is shutting down\n")
+            out.println("KILL_SERVICE\\n")
+            out.flush() // tell the client the server shut down
+            shutdownServer() // call the shut down method
+            socket.close() // close the socket (ie the thread).
+          }
+          else if (prefix == "HELO ") {
+            val messageWithoutHELO = recv.drop(5)
+            val ip = socket.getRemoteSocketAddress().toString()
+            val port = socket.getPort()
+            out.println(messageWithoutHELO + "IP" + ip + "\\n" + "Port:" + port + "\\n" + "StudentID:12307233\\n")
+            out.flush()
+          }
+          else {
+            out.println("Malformed request")
+            out.flush()
+          }
+          out.close()
+
+        } catch {
+          case s: SocketException => println("Server Not Running")
         }
-        val prefix = recv take 5
-        if (recv == "KILL_SERVICE") {
-          println(Thread.currentThread.getName() + " is shutting down\n")
-          out.println("KILL_SERVICE")
-          out.flush() // tell the client the server shut down
-          shutdownServer() // call the shut down method
-          socket.close() // close the socket (ie the thread).
-        }
-        else if ( prefix == "HELO ") {
-          val messageWithoutHELO = recv.drop(5)
-          val ip = socket.getRemoteSocketAddress().toString()
-          val port = socket.getPort()
-          out.println(messageWithoutHELO + "IP" + ip + "\n" + "Port:" + port + "\n" + "StudentID:12307233\n")
-          out.flush()
-        }
-        else {
-          out.println("Malformed request")
-          out.flush()
-        }
-        out.close()
       }
     }
 
@@ -111,6 +116,7 @@ object MultithreadedServer{
         }
       }catch{
         case e: SocketException => println("Server shut down")
+
       }
     }
   }
