@@ -1,5 +1,5 @@
 /**
- * Created by simon on 10/10/2015.
+ * Created by Simon on 10/10/2015.
  *
  * I found this tutorial helpful in figuring out how to use
  * thread pools and concurrency in scala, I do take credit this implementation.
@@ -9,72 +9,119 @@
  * https://twitter.github.io/scala_school/concurrency.html
  */
 import java.io._
-import java.net.{InetAddress, Socket, ServerSocket}
+import java.net.{SocketException, InetAddress, Socket, ServerSocket}
 import java.util.concurrent.{Executors}
 import scala.io._
 
 object MultithreadedServer{
-  var kill = false;
-  var messageIP = ""
+  /**
+   * This is a simple server class to represent a multi threaded server.
+   * It contains both a Server and a Worker class. The worker doing all the
+   * work for the server.
+   * @param portNumber - The port the server operates on.
+   */
+  class Server(portNumber: Int) extends Runnable {
+    var NUMBER_OF_THREADS = 20 // Maximum number of threads.
+    val serverSocket = new ServerSocket(portNumber) // setting up the server
+    println("Server running on port number: " + portNumber) // display to console
+    val threadPool = Executors.newFixedThreadPool(NUMBER_OF_THREADS) // create the thread pool
 
-  class Server(portNumber: Int) extends Runnable{
-    val NUMBER_OF_THREADS = 20
-    val serverSocket = new ServerSocket(portNumber)
-    println("Server running on port number: "+portNumber)
-    val threadPool = Executors.newFixedThreadPool(NUMBER_OF_THREADS)
-
-    def run(): Unit ={
-      try{
+    /**
+     * This is the run method of the server, it is needed as I have extended my server
+     * to be Runnable, so I could have multiple servers should the need arise.
+     * It creates a new socket for every new connection to the server.
+     * It loops forever, as long as the server is not closed.
+     */
+    def run(): Unit = {
+      try {
         while (!serverSocket.isClosed) {
-          if (kill == true){
-            serverSocket.close()
-            threadPool.shutdown()
-            println("Server shut down")
-          }
-          else {
-            messageIP = InetAddress.getLocalHost.getHostAddress
-            threadPool.execute(new Worker(serverSocket.accept()))
+          try{
+            threadPool.execute(new Worker(serverSocket.accept())) // allocate a new Worker a Socket
             println("Made a new worker")
+          }catch {
+            case socketE: SocketException =>
+              println("Sorry, the server isn't running");
           }
         }
-      }finally threadPool.shutdown()
+      } finally {
+        println("Thread Pool shutdown")
+        threadPool.shutdown()
+      }
     }
-  }
 
-  // A class that handles the work for the server.
-  class Worker(socket: Socket) extends Runnable {
 
-    val outputStream = socket.getOutputStream()
-    val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream,"UTF-8")))
-    lazy val in = new BufferedSource(socket.getInputStream()).getLines()
+    /**
+     * A class that handles the work for the server. It takes in a connection
+     * from the server and does some work based off of input to the socket.
+     */
+    class Worker(socket: Socket) extends Runnable {
 
-    var recv = ""
-    def run() {
-      if(in.hasNext){
-        recv = in.next()
-        println("Received: "+recv)
-      }
+      // generic socket set up. ( used from the last lab)
+      val outputStream = socket.getOutputStream()
+      val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8")))
+      lazy val in = new BufferedSource(socket.getInputStream()).getLines()
 
-      if(recv == "KILL_SERVICE") {
-        kill = true
-        println(Thread.currentThread.getName() + " is shutting down\n")
-        out.println("KILL_SERVICE")
-        out.flush()
+      var recv = "" // variable to store messages.
+
+      /**
+       * This is where the work of the worker is done, it checks the
+       * message for either KILL_SERVICE or "HELO " as does tasks depending
+       * on the input
+       * - Replying with the desired string if HELO
+       * - Or it kills the server if KILL_SERVICE
+       */
+      def run() {
+        // if there is another message, get it.
+        if (in.hasNext) {
+          recv = in.next()
+          println("Received: " + recv)
+        }
+        val prefix = recv take 5
+        if (recv == "KILL_SERVICE") {
+          println(Thread.currentThread.getName() + " is shutting down\n")
+          out.println("KILL_SERVICE")
+          out.flush() // tell the client the server shut down
+          shutdownServer() // call the shut down method
+          socket.close() // close the socket (ie the thread).
+        }
+        else if ( prefix == "HELO ") {
+          val messageWithoutHELO = recv.drop(5)
+          val ip = socket.getRemoteSocketAddress().toString()
+          val port = socket.getPort()
+          out.println(messageWithoutHELO + "IP" + ip + "\n" + "Port:" + port + "\n" + "StudentID:12307233\n")
+          out.flush()
+        }
+        else {
+          out.println("Malformed request")
+          out.flush()
+        }
         out.close()
-        socket.close()
-      }else if(recv.contains("HELO ")){
-        val messageWithoutHELO = recv.drop(5)
-        out.println(messageWithoutHELO+"IP:"+messageIP+"\n"+"Port:"+8000+"\n"+"StudentID:12307233\n")
-        out.flush()
       }
-      out.close()
+    }
+
+    /**
+     * This function kills the server.
+     */
+    def shutdownServer(): Unit = {
+      try{
+        if(serverSocket != null) {
+          serverSocket.close()
+          threadPool.shutdownNow()
+          println("Server shut down")
+        }
+      }catch{
+        case e: SocketException => println("Server shut down")
+      }
     }
   }
 
   def main(args: Array[String]){
-    if(args(0) == null) println("Please provide command line arguments")
-    val Server = new Server(args(0).toInt)
-    Server.run()
+    try{
+      new Server(args(0).toInt).run()
+    }catch{
+      case outOfBounds : java.lang.ArrayIndexOutOfBoundsException =>
+        println("Please provide command line arguments")
+    }
   }
 }
 
