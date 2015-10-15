@@ -25,7 +25,6 @@ object MultithreadedServer{
     val serverSocket = new ServerSocket(portNumber) // setting up the server
     println("Server running on port number: " + portNumber) // display to console
     val threadPool = Executors.newFixedThreadPool(NUMBER_OF_THREADS) // create the thread pool
-
     /**
      * This is the run method of the server, it is needed as I have extended my server
      * to be Runnable, so I could have multiple servers should the need arise.
@@ -89,7 +88,7 @@ object MultithreadedServer{
             val messageWithoutHELO = recv.drop(5)
             val ip = socket.getRemoteSocketAddress().toString()
             val port = socket.getPort()
-            out.println(messageWithoutHELO + "IP" + ip + "\\n" + "Port:" + port + "\\n" + "StudentID:12307233\\n")
+            out.println(messageWithoutHELO + "IP" + ip + "\\n" + "Port:" + port + "\\n" + "StudentID:ac7ce4082772456e04ad6d80cceff8ddc274a78fd3dc1f28fd05aafdc4665e1b\\n")
             out.flush()
           }
           else {
@@ -97,7 +96,6 @@ object MultithreadedServer{
             out.flush()
           }
           out.close()
-
         } catch {
           case s: SocketException => println("Server Not Running")
         }
@@ -116,7 +114,6 @@ object MultithreadedServer{
         }
       }catch{
         case e: SocketException => println("Server shut down")
-
       }
     }
   }
@@ -130,6 +127,3 @@ object MultithreadedServer{
     }
   }
 }
-
-
-
