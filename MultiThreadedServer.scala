@@ -77,9 +77,9 @@ object MultithreadedServer{
             println("Received: " + recv)
           }
           val prefix = recv take 5
-          if (recv == "KILL_SERVICE\\n") {
+          if (recv == "KILL_SERVICE\n") {
             println(Thread.currentThread.getName() + " is shutting down\n")
-            out.println("KILL_SERVICE\\n")
+            out.println("KILL_SERVICE\n")
             out.flush() // tell the client the server shut down
             shutdownServer() // call the shut down method
             socket.close() // close the socket (ie the thread).
