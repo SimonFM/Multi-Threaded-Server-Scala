@@ -88,7 +88,7 @@ object MultithreadedServer{
             val messageWithoutHELO = recv.drop(5)
             val ip = socket.getRemoteSocketAddress().toString()
             val port = socket.getPort()
-            out.println(messageWithoutHELO + "IP" + ip + "\\n" + "Port:" + port + "\\n" + "StudentID:ac7ce4082772456e04ad6d80cceff8ddc274a78fd3dc1f28fd05aafdc4665e1b\\n")
+            out.println(messageWithoutHELO + "IP" + ip + "\n" + "Port:" + port + "\n" + "StudentID:ac7ce4082772456e04ad6d80cceff8ddc274a78fd3dc1f28fd05aafdc4665e1b\n")
             out.flush()
           }
           else {
