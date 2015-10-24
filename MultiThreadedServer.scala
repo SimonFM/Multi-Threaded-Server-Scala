@@ -23,8 +23,11 @@ object MultithreadedServer{
   class Server(portNumber: Int) extends Runnable {
     var NUMBER_OF_THREADS = 20 // Maximum number of threads.
     val serverSocket = new ServerSocket(portNumber) // setting up the server
+    println(serverSocket.getInetAddress)
+    println(serverSocket.getLocalSocketAddress)
     println("Server running on port number: " + portNumber) // display to console
     val threadPool = Executors.newFixedThreadPool(NUMBER_OF_THREADS) // create the thread pool
+
     /**
      * This is the run method of the server, it is needed as I have extended my server
      * to be Runnable, so I could have multiple servers should the need arise.
@@ -77,9 +80,9 @@ object MultithreadedServer{
             println("Received: " + recv)
           }
           val prefix = recv take 5
-          if (recv == "KILL_SERVICE\n") {
+          if (recv == "KILL_SERVICE") {
             println(Thread.currentThread.getName() + " is shutting down\n")
-            out.println("KILL_SERVICE\n")
+            out.println("KILL_SERVICE")
             out.flush() // tell the client the server shut down
             shutdownServer() // call the shut down method
             socket.close() // close the socket (ie the thread).
@@ -96,6 +99,7 @@ object MultithreadedServer{
             out.flush()
           }
           out.close()
+
         } catch {
           case s: SocketException => println("Server Not Running")
         }
@@ -114,6 +118,7 @@ object MultithreadedServer{
         }
       }catch{
         case e: SocketException => println("Server shut down")
+
       }
     }
   }
@@ -127,3 +132,6 @@ object MultithreadedServer{
     }
   }
 }
+
+
+
