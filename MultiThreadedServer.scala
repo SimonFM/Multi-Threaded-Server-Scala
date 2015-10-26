@@ -88,7 +88,7 @@ object MultithreadedServer{
           else if (prefix == "HELO ") {
             val messageWithoutHELO = recv + "\n"
             print(messageWithoutHELO)
-            val ip = "178.62.101.81" + "\n"
+            val ip = socket.getLocalAddress().toString().drop(1) + "\n"
             val port = serverSocket.getLocalPort + "\n"
             out.println(messageWithoutHELO + "IP:" + ip + "Port:" + port  + "StudentID:ac7ce4082772456e04ad6d80cceff8ddc274a78fd3dc1f28fd05aafdc4665e1b")
             out.flush()
