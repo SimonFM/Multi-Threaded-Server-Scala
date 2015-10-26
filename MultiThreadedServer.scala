@@ -9,7 +9,8 @@
  * https://twitter.github.io/scala_school/concurrency.html
  */
 import java.io._
-import java.net.{SocketException, InetAddress, Socket, ServerSocket}
+import java.net._
+import java.util
 import java.util.concurrent.{Executors}
 import scala.io._
 
@@ -23,11 +24,8 @@ object MultithreadedServer{
   class Server(portNumber: Int) extends Runnable {
     var NUMBER_OF_THREADS = 20 // Maximum number of threads.
     val serverSocket = new ServerSocket(portNumber) // setting up the server
-    println(serverSocket.getInetAddress)
-    println(serverSocket.getLocalSocketAddress)
     println("Server running on port number: " + portNumber) // display to console
     val threadPool = Executors.newFixedThreadPool(NUMBER_OF_THREADS) // create the thread pool
-
     /**
      * This is the run method of the server, it is needed as I have extended my server
      * to be Runnable, so I could have multiple servers should the need arise.
@@ -88,10 +86,11 @@ object MultithreadedServer{
             socket.close() // close the socket (ie the thread).
           }
           else if (prefix == "HELO ") {
-            val messageWithoutHELO = recv.drop(5)
-            val ip = socket.getRemoteSocketAddress().toString()
-            val port = socket.getPort()
-            out.println(messageWithoutHELO + "IP" + ip + "\n" + "Port:" + port + "\n" + "StudentID:ac7ce4082772456e04ad6d80cceff8ddc274a78fd3dc1f28fd05aafdc4665e1b\n")
+            val messageWithoutHELO = recv + "\n"
+            print(messageWithoutHELO)
+            val ip = "178.62.101.81" + "\n"
+            val port = serverSocket.getLocalPort + "\n"
+            out.println(messageWithoutHELO + "IP:" + ip + "Port:" + port  + "StudentID:ac7ce4082772456e04ad6d80cceff8ddc274a78fd3dc1f28fd05aafdc4665e1b")
             out.flush()
           }
           else {
